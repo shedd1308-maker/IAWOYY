@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#b9e7d8">
+<title>IAWOY — Mobile Demo</title>
+<style>
+:root{--ink:#29413d;--mint:#b9e7d8;--pink:#f5cbd7;--cream:#fff6df}
+*{box-sizing:border-box}body{margin:0;background:#182522;color:var(--ink);font-family:system-ui,-apple-system,sans-serif;display:grid;min-height:100svh;place-items:center;padding:12px}
+#game{width:min(100%,760px);min-height:min(92svh,760px);background:var(--cream);border:5px solid #e8f0df;border-radius:22px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 15px 60px #0008}
+header{padding:14px 18px;background:var(--mint);display:flex;justify-content:space-between;align-items:center;font-weight:800;letter-spacing:.08em}
+#scene{position:relative;flex:1;min-height:350px;overflow:hidden;background:linear-gradient(#d5f1e7 0 65%,#b7d9ad 65%);transition:filter .5s}
+.cloud{position:absolute;background:#fff9;border-radius:50px;width:100px;height:28px;top:12%;left:12%;box-shadow:35px 4px 0 -4px #fff9}
+.cloud.two{top:23%;left:68%;transform:scale(.7)}
+#sun{position:absolute;right:12%;top:9%;width:58px;height:58px;border-radius:50%;background:#ffe7a0}
+#ground{position:absolute;bottom:0;width:100%;height:35%;background:repeating-linear-gradient(90deg,#a9d49f 0 35px,#a3ce99 35px 70px)}
+#player{position:absolute;bottom:29%;left:12%;font-size:42px;filter:drop-shadow(0 3px 1px #4565)}
+#mascot{position:absolute;bottom:28%;right:12%;font-size:76px;filter:drop-shadow(0 4px 2px #4565)}
+.item{position:absolute;bottom:34%;font-size:34px;cursor:pointer;display:none;animation:bob 1.5s infinite ease-in-out}
+#item0{left:34%}#item1{left:57%}#item2{left:77%}
+@keyframes bob{50%{transform:translateY(-8px)}}
+#dialog{background:#fff9e9;padding:15px 18px;min-height:100px;line-height:1.4}
+#dialog strong{display:block;margin-bottom:5px}
+#controls{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#f3e8cf;gap:12px}
+.pad{display:flex;gap:8px}button{border:0;border-radius:14px;padding:13px 17px;background:#6eaa91;color:white;font-weight:800;font-size:16px;touch-action:manipulation}
+button:active{transform:scale(.96)}#interact{background:#d27f9a}#start{background:#547f70}
+.small{font-size:12px;opacity:.75}
+.glitch{filter:saturate(.35) contrast(1.3) hue-rotate(35deg)}.glitch:after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 5px,#253c3c18 6px 7px)}
+@media(max-height:650px){#game{min-height:96svh}#scene{min-height:260px}#dialog{min-height:76px;padding:9px 14px}button{padding:10px 13px}}
+</style>
+</head>
+<body>
+<main id="game">
+<header><span>IAWOY</span><span class="small" id="chapter">УРОК 1 · ДОБРО ПОЖАЛОВАТЬ</span></header>
+<section id="scene" aria-label="Игровой мир">
+<div class="cloud"></div><div class="cloud two"></div><div id="sun"></div><div id="ground"></div>
+<div id="player">🧒</div><div id="mascot">🐹</div>
+<div class="item" id="item0">👓</div><div class="item" id="item1">☕</div><div class="item" id="item2">📼</div>
+</section>
+<section id="dialog"><strong id="speaker">Крот</strong><span id="line">Привет, дружок! Добро пожаловать на наш маленький урок. Нажми «Начать».</span></section>
+<footer id="controls">
+<div class="pad"><button id="left" aria-label="Влево">◀</button><button id="right" aria-label="Вправо">▶</button></div>
+<button id="start">Начать</button><button id="interact">Изучить</button>
+</footer>
+</main>
+<script>
+const player=document.querySelector('#player'),scene=document.querySelector('#scene'),line=document.querySelector('#line'),speaker=document.querySelector('#speaker'),start=document.querySelector('#start'),interact=document.querySelector('#interact'),mascot=document.querySelector('#mascot');
+let x=12,started=false,found=0,step=0;
+const items=[...document.querySelectorAll('.item')], messages=[
+'Какой чудесный день! Давай немного осмотримся.',
+'Ты нашёл очки. Почему они здесь? На секунду тебе кажется, что ты уже видел эту комнату…',
+'Чашка холодная. В памяти мелькает чей-то сердитый голос.',
+'Эта кассета выглядит знакомо. На ней написано: «Для моей любимой племянницы».',
+'Картинка распадается на полосы. Крот больше не улыбается. «Я всегда присмотрю за тобой».'
+];
+function say(who,text){speaker.textContent=who;line.textContent=text}
+function move(d){if(!started)return;x=Math.max(2,Math.min(88,x+d));player.style.left=x+'%'}
+document.querySelector('#left').addEventListener('pointerdown',()=>move(-5));
+document.querySelector('#right').addEventListener('pointerdown',()=>move(5));
+document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='a')move(-3);if(e.key==='ArrowRight'||e.key==='d')move(3);if(e.key===' '||e.key==='Enter')collect()});
+start.onclick=()=>{started=true;start.textContent='Урок начат';items.forEach((el,i)=>{el.style.display='block';el.style.opacity='1'});say('Крот',messages[0])};
+function collect(){if(!started){say('Крот','Сначала нажми «Начать».');return}
+let nearest=-1,dist=100;
+items.forEach((el,i)=>{if(el.style.display!=='none'&&el.style.opacity!=='0'){let p=parseFloat(getComputedStyle(el).left)/scene.clientWidth*100;let dd=Math.abs(p-x);if(dd<dist){dist=dd;nearest=i}}});
+if(nearest<0||dist>17){say('Крот','Подойди поближе к предмету. Используй стрелки.');return}
+items[nearest].style.opacity='0';found++;scene.classList.add('glitch');setTimeout(()=>scene.classList.remove('glitch'),500);
+if(found===1){say('Воспоминание',messages[1]);mascot.textContent='🐹'}
+if(found===2){say('Воспоминание',messages[2]);mascot.textContent='🐹'}
+if(found===3){say('Кассета',messages[3]);setTimeout(()=>{scene.classList.add('glitch');mascot.textContent='🎭';say('Неизвестный голос',messages[4]);document.querySelector('#chapter').textContent='СИГНАЛ НАРУШЕН'},900)}
+}
+interact.onclick=collect;
+</script>
+</body></html>
